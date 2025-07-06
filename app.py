@@ -5,10 +5,11 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from st_aggrid import AgGrid, GridOptionsBuilder
 
 # Load data
-df_stats = pd.read_csv("qualification_stats.csv")          # Leg-level and Elo stats
-qual_by_gd = pd.read_csv("qualification_by_gd.csv")        # GD-dependent qualification
+df_stats = pd.read_csv("qualification_stats.csv")           # Leg-level and Elo stats
+qual_by_gd = pd.read_csv("qualification_by_gd.csv")         # GD-dependent qualification
 
 st.set_page_config(page_title="UEFA Qualification Dashboard", layout="wide")
 
@@ -23,15 +24,43 @@ filtered_df = df_stats.copy()
 if team_filter != "All":
     filtered_df = filtered_df[(filtered_df["Team 1"] == team_filter) | (filtered_df["Team 2"] == team_filter)]
 
-# Section 1: Table summary
-st.subheader("📋 Qualification Summary")
-st.dataframe(filtered_df.style.format({
-    "Team 1 Win %": "{:.1f}%", "Team 2 Win %": "{:.1f}%",
-    "1st Leg Win % T1": "{:.1f}%", "1st Leg Win % T2": "{:.1f}%", "1st Leg Draw %": "{:.1f}%",
-    "2nd Leg Win % T1": "{:.1f}%", "2nd Leg Win % T2": "{:.1f}%", "2nd Leg Draw %": "{:.1f}%"
-}))
+# Section 1: Qualification Breakdown by Stage
+st.subheader("📋 1st Leg Performance")
+st.dataframe(
+    filtered_df[[
+        "Team 1", "Team 2",
+        "1st Leg Win % T1", "1st Leg Draw %", "1st Leg Win % T2"
+    ]].style.format({
+        "1st Leg Win % T1": "{:.1f}%", "1st Leg Draw %": "{:.1f}%", "1st Leg Win % T2": "{:.1f}%"
+    }),
+    use_container_width=True
+)
 
-# Section 2: Elo plot
+st.subheader("📋 2nd Leg Performance")
+st.dataframe(
+    filtered_df[[
+        "Team 1", "Team 2",
+        "2nd Leg Win % T1", "2nd Leg Draw %", "2nd Leg Win % T2"
+    ]].style.format({
+        "2nd Leg Win % T1": "{:.1f}%", "2nd Leg Draw %": "{:.1f}%", "2nd Leg Win % T2": "{:.1f}%"
+    }),
+    use_container_width=True
+)
+
+st.subheader("📋 Overall Qualification")
+st.dataframe(
+    filtered_df[[
+        "Team 1", "Team 2",
+        "Team 1 Win %", "Team 2 Win %",
+        "Team 1 Elo", "Team 2 Elo"
+    ]].style.format({
+        "Team 1 Win %": "{:.1f}%", "Team 2 Win %": "{:.1f}%",
+        "Team 1 Elo": "{:.0f}", "Team 2 Elo": "{:.0f}"
+    }),
+    use_container_width=True
+)
+
+# Section 2: Elo Ratings plot
 st.subheader("📈 Elo Ratings (1st Leg)")
 elo_plot = px.scatter(
     filtered_df,
